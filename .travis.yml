@@ -2,5 +2,6 @@ services:
   - docker
 
 script:
-  - docker build -t pavan0604/nginx .
-  - docker push pavan0604/nginx
+  - docker build -t pavan0604/nginx:latest .
+  - docker images
+  - docker push pavan0604/nginx:latest
