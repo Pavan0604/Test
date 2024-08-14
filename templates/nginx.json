@@ -105,7 +105,7 @@
                 {
                   "Name": "STACK_PREFIX",
                   "Value": {
-                    "Ref": "NetworkStack"
+                    "Ref": "AWS::StackName"
                   }
                 }
               ],
