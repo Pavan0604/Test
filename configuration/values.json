@@ -1,0 +1,7 @@
+{
+    "ap-south-1": {
+        "Nginx": {
+            "NginxContainerTag": "latest"
+        }
+    }
+}

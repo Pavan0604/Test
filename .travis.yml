@@ -1,8 +1,25 @@
 services:
   - docker
 
-script:
-  - docker build -t pavan0604/nginx:$TRAVIS_BUILD_NUMBER .
-  - docker images
-  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-  - docker push pavan0604/nginx:$TRAVIS_BUILD_NUMBER
+
+stages:
+  - name: build
+  - name: deploy
+    if: branch = main 
+    
+jobs:
+  include:
+    - stage: build
+      name: "build"
+      script:
+        - docker build -t pavan0604/nginx:latest .
+        - docker images
+        - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+        - docker push pavan0604/nginx:latest
+        - ./cfstack diff --manifest prod.manifest.json --values configuration/values.json --role $AWS_CLOUDFORMATION_SERVICE_IAM_ROLE
+        - cat diff.json
+
+    # - stage: deploy
+    #   name: "Deploy to cf"
+    #   script:
+    #     - ./cfstack deploy --manifest diff.json --values configuration/values.json --role $AWS_CLOUDFORMATION_SERVICE_IAM_ROLE

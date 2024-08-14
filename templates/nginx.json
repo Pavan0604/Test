@@ -1,0 +1,261 @@
+{
+    "Parameters": {
+      "NginxContainerTag": {
+        "Description": "Nginx image Container tag",
+        "Type": "String"
+      }
+    },
+    "Resources": {
+      "NginxEcsCluster": {
+        "Type": "AWS::ECS::Cluster",
+        "Properties": {
+        }
+      },
+      "NginxSecretsManagerSecret": {
+        "Type": "AWS::SecretsManager::Secret",
+        "Properties": {
+          "Description": {
+            "Fn::Sub": "This is a Secrets Manager secret for ${AWS::StackName}-NginxSecretsManagerSecret"
+          },
+          "SecretString": "{\"username\":\"changeme\",\"password\":\"replaceitwithpassword\"}"
+        }
+      },
+      "NginxEcsTaskDefinitionIamRole": {
+        "Properties": {
+          "AssumeRolePolicyDocument": {
+            "Statement": [
+              {
+                "Action": [
+                  "sts:AssumeRole"
+                ],
+                "Effect": "Allow",
+                "Principal": {
+                  "Service": [
+                    "ecs-tasks.amazonaws.com"
+                  ]
+                }
+              }
+            ]
+          },
+          "Path": "/",
+          "RoleName": {
+            "Fn::Join": [
+              "-",
+              [
+                {
+                  "Ref": "AWS::StackName"
+                },
+                "NginxEcsTaskDefinitionIamRole"
+              ]
+            ]
+          }
+        },
+        "Type": "AWS::IAM::Role"
+      },
+      "NginxEcsTaskExecutionIamPolicy": {
+        "Type": "AWS::IAM::Policy",
+        "Properties": {
+          "PolicyName": {
+            "Fn::Join": [
+              "-",
+              [
+                {
+                  "Ref": "AWS::StackName"
+                },
+                "NginxEcsTaskExecutionIamPolicy"
+              ]
+            ]
+          },
+          "PolicyDocument": {
+            "Statement": [
+              {
+                "Sid": "AllowSecretsRetriveArtifactoryCredentialsForVmagent",
+                "Effect": "Allow",
+                "Action": [
+                  "secretsmanager:GetSecretValue"
+                ],
+                "Resource": "*"
+              },
+              {
+                "Sid": "EnableEcsExecCommandsToExecute",
+                "Effect": "Allow",
+                "Action": [
+                  "ssmmessages:CreateControlChannel",
+                  "ssmmessages:CreateDataChannel",
+                  "ssmmessages:OpenControlChannel",
+                  "ssmmessages:OpenDataChannel"
+                ],
+                "Resource": "*"
+              }
+            ]
+          },
+          "Roles": [
+            {
+              "Ref": "NginxEcsTaskDefinitionIamRole"
+            }
+          ]
+        }
+      },
+      "NginxEcsTaskDefinition": {
+        "Type": "AWS::ECS::TaskDefinition",
+        "Properties": {
+          "ContainerDefinitions": [
+            {
+              "Environment": [
+                {
+                  "Name": "STACK_PREFIX",
+                  "Value": {
+                    "Ref": "NetworkStack"
+                  }
+                }
+              ],
+              "Essential": true,
+              "Image": {
+                "Fn::Join": [
+                  ":",
+                  [
+                    "pavan0604/nginx",
+                    {
+                      "Ref": "NginxContainerTag"
+                    }
+                  ]
+                ]
+              },
+              "LogConfiguration": {
+                "Fn::If" : [
+                  "StackIsSk1",
+                  {
+                    "LogDriver": "splunk",
+                    "Options": {
+                      "env": "STACK_NAME",
+                      "splunk-format": "raw",
+                      "splunk-index": "vmagent",
+                      "splunk-source": "vmagent-stdout",
+                      "splunk-url": {
+                        "Fn::Sub": "https://${NetworkStack}.splunk-hec.clevertap-internal.io"
+                      },
+                      "splunk-verify-connection": "false"
+                    },
+                    "SecretOptions": [
+                      {
+                        "Name": "splunk-token",
+                        "ValueFrom": {
+                          "Fn::Join": [
+                            ":",
+                            [
+                              {
+                                "Fn::ImportValue": {
+                                  "Fn::Join": [
+                                    "-",
+                                    [
+                                      {
+                                        "Ref": "NetworkStack"
+                                      },
+                                      "SharedResources-SplunkTokenSecretsManagerSecret"
+                                    ]
+                                  ]
+                                }
+                              },
+                              "splunk-token::"
+                            ]
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "Ref": "AWS::NoValue"
+                  }
+                ]
+              },
+              "RepositoryCredentials": {
+                "CredentialsParameter": {
+                  "Ref": "NginxSecretsManagerSecret"
+                }
+              },
+              "Ulimits": [
+                {
+                  "HardLimit": 900000,
+                  "Name": "nofile",
+                  "SoftLimit": 900000
+                }
+              ],
+              "Name": "nginx",
+              "Privileged": false,
+              "ReadonlyRootFilesystem": false,
+              "MountPoints": [
+                {
+                  "ContainerPath": "/home/vmagent/logs",
+                  "SourceVolume": "logs"
+                }
+              ]
+            }
+          ],
+          "ExecutionRoleArn": {
+            "Fn::GetAtt": [
+              "NginxEcsTaskDefinitionIamRole",
+              "Arn"
+            ]
+          },
+          "TaskRoleArn": {
+            "Fn::GetAtt": [
+              "NginxEcsTaskDefinitionIamRole",
+              "Arn"
+            ]
+          },
+          "Family": {
+            "Ref": "AWS::StackName"
+          },
+          "NetworkMode": "awsvpc",
+          "Cpu": "128",
+          "Memory": "256",
+          "RequiresCompatibilities": [
+            "FARGATE"
+          ]
+        }
+      },
+      "NginxEcsService": {
+        "Type": "AWS::ECS::Service",
+        "Properties": {
+          "Cluster": {
+            "Ref": "NginxEcsCluster"
+          },
+          "DeploymentConfiguration": {
+            "MaximumPercent": "200",
+            "MinimumHealthyPercent": "100"
+          },
+          "DesiredCount": 0,
+          "LaunchType": "FARGATE",
+          "EnableExecuteCommand": true,
+          "PlatformVersion": "1.4.0",
+          "SchedulingStrategy": "REPLICA",
+          "TaskDefinition": {
+            "Ref": "NginxEcsTaskDefinition"
+          },
+          "NetworkConfiguration": {
+            "AwsvpcConfiguration": {
+              "AssignPublicIp": "DISABLED",
+              "SecurityGroups": [
+                "sg-0815218a76f8d4ec0"
+              ],
+              "Subnets": [
+                "subnet-01adb16d857b7f766",
+                "subnet-041666f37c630bf79"
+              ]
+            }
+          },
+          "PropagateTags" : "SERVICE",
+          "Tags" : [
+            {
+              "Key": "ct-aws:cloudformation:stack-name",
+              "Value": {
+                "Ref": "AWS::StackName"
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+  
+  

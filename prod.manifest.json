@@ -1,0 +1,19 @@
+{
+    "ParallelDeployment": false,
+    "Regions": [
+        {
+            "Name": "ap-south-1",
+            "Stacks": [
+                {
+                    "StackName": "Nginx",
+                    "Action": "CREATE",
+                    "TemplatePath": "templates/nginx.json",
+                    "Parameters": {
+                        "NginxContainerTag": "{{ NginxContainerTag }}"
+                    },
+                    "StackPolicy": {}
+                }
+            ]  
+        }
+    ]
+}
