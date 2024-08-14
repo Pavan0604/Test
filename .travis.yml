@@ -2,7 +2,7 @@ services:
   - docker
 
 script:
-  - docker build -t pavan0604/nginx:latest .
+  - docker build -t pavan0604/nginx:$TRAVIS_BUILD_NUMBER .
   - docker images
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-  - docker push pavan0604/nginx:latest
+  - docker push pavan0604/nginx:$TRAVIS_BUILD_NUMBER
