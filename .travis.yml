@@ -1,6 +1,6 @@
-language: python
-python:
-  - "3.8"
+services:
+  - docker
 
 script:
-  - python test.py
+  - docker build -t pavan0604/nginx .
+  - docker push pavan0604/nginx
