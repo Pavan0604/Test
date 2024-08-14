@@ -121,53 +121,6 @@
                   ]
                 ]
               },
-              "LogConfiguration": {
-                "Fn::If" : [
-                  "StackIsSk1",
-                  {
-                    "LogDriver": "splunk",
-                    "Options": {
-                      "env": "STACK_NAME",
-                      "splunk-format": "raw",
-                      "splunk-index": "vmagent",
-                      "splunk-source": "vmagent-stdout",
-                      "splunk-url": {
-                        "Fn::Sub": "https://${NetworkStack}.splunk-hec.clevertap-internal.io"
-                      },
-                      "splunk-verify-connection": "false"
-                    },
-                    "SecretOptions": [
-                      {
-                        "Name": "splunk-token",
-                        "ValueFrom": {
-                          "Fn::Join": [
-                            ":",
-                            [
-                              {
-                                "Fn::ImportValue": {
-                                  "Fn::Join": [
-                                    "-",
-                                    [
-                                      {
-                                        "Ref": "NetworkStack"
-                                      },
-                                      "SharedResources-SplunkTokenSecretsManagerSecret"
-                                    ]
-                                  ]
-                                }
-                              },
-                              "splunk-token::"
-                            ]
-                          ]
-                        }
-                      }
-                    ]
-                  },
-                  {
-                    "Ref": "AWS::NoValue"
-                  }
-                ]
-              },
               "RepositoryCredentials": {
                 "CredentialsParameter": {
                   "Ref": "NginxSecretsManagerSecret"

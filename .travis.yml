@@ -1,7 +1,6 @@
 services:
   - docker
 
-
 stages:
   - name: build
   - name: deploy
