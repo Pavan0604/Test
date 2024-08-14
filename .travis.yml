@@ -1,4 +1,6 @@
-language: bash
+language: python
+python:
+  - "3.8"
 
 script:
-  - echo "Hello World"
+  - python test.py
