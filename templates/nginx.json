@@ -135,13 +135,7 @@
               ],
               "Name": "nginx",
               "Privileged": false,
-              "ReadonlyRootFilesystem": false,
-              "MountPoints": [
-                {
-                  "ContainerPath": "/home/vmagent/logs",
-                  "SourceVolume": "logs"
-                }
-              ]
+              "ReadonlyRootFilesystem": false
             }
           ],
           "ExecutionRoleArn": {
@@ -210,5 +204,4 @@
       }
     }
   }
-  
   
