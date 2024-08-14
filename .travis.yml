@@ -17,11 +17,9 @@ jobs:
         - docker push pavan0604/nginx:latest
         - ./cfstack diff --manifest prod.manifest.json --values configuration/values.json --role $AWS_CLOUDFORMATION_SERVICE_IAM_ROLE
         - cat diff.json
-      artifacts:
-        paths:
-          - diff.json
-
-    - stage: deploy
-      name: "Deploy to cf"
-      script:
         - ./cfstack deploy --manifest diff.json --values configuration/values.json --role $AWS_CLOUDFORMATION_SERVICE_IAM_ROLE
+
+    # - stage: deploy
+    #   name: "Deploy to cf"
+    #   script:
+    #     - ./cfstack deploy --manifest diff.json --values configuration/values.json --role $AWS_CLOUDFORMATION_SERVICE_IAM_ROLE
