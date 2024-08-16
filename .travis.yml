@@ -2,14 +2,26 @@ services:
   - docker
 
 stages:
-  - name: build
-  - name: deploy
+  - name: build docker image
+  - name: build clouformation repo
     if: branch = main 
+  - name: deploy to aws
+    if: branch = main
+  
+env:
+  global:
+    - PATH=$HOME/.local/bin:$PATH
+
+before_install:
+  - pyenv global 3.7.1
+  - pip install -U pip
+  - pip install awscli
+  - aws s3 sync s3://travis-build-stages-shared-storage-test/$TRAVIS_BUILD_NUMBER ~/$TRAVIS_BUILD_NUMBER
     
 jobs:
   include:
-    - stage: build
-      name: "build"
+    - stage: build docker image
+      name: "build docker image"
       script:
         - docker build -t pavan0604/nginx:latest .
         - docker images
@@ -17,9 +29,16 @@ jobs:
         - docker push pavan0604/nginx:latest
         - ./cfstack diff --manifest prod.manifest.json --values configuration/values.json --role $AWS_CLOUDFORMATION_SERVICE_IAM_ROLE
         - cat diff.json
-        - ./cfstack deploy --manifest diff.json --values configuration/values.json --role $AWS_CLOUDFORMATION_SERVICE_IAM_ROLE
 
-    # - stage: deploy
-    #   name: "Deploy to cf"
-    #   script:
-    #     - ./cfstack deploy --manifest diff.json --values configuration/values.json --role $AWS_CLOUDFORMATION_SERVICE_IAM_ROLE
+    - stage: build clouformation repo
+      name: "build clouformation repo"
+      script:
+        - ./cfstack diff --manifest prod.manifest.json --values configuration/values.json --role $AWS_CLOUDFORMATION_SERVICE_IAM_ROLE
+        - cat diff.json
+        - aws s3 cp diff.json s3://testbucketforcloudflare/$TRAVIS_BUILD_NUMBER/diff.json
+
+    - stage: deploy to aws
+      name: "Deploy to cf"
+      script:
+        - aws s3 cp s3://testbucketforcloudflare/$TRAVIS_BUILD_NUMBER/diff.json ./diff.json
+        - ./cfstack deploy --manifest diff.json --values configuration/values.json --role $AWS_CLOUDFORMATION_SERVICE_IAM_ROLE
