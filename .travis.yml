@@ -16,8 +16,7 @@ env:
 before_install:
   - pip install -U pip
   - pip install awscli
-  - aws s3 sync s3://travis-build-stages-shared-storage-test/$TRAVIS_BUILD_NUMBER ~/$TRAVIS_BUILD_NUMBER
-    
+      
 jobs:
   include:
     - stage: build docker image
@@ -27,8 +26,6 @@ jobs:
         - docker images
         - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
         - docker push pavan0604/nginx:latest
-        - ./cfstack diff --manifest prod.manifest.json --values configuration/values.json --role $AWS_CLOUDFORMATION_SERVICE_IAM_ROLE
-        - cat diff.json
 
     - stage: build clouformation repo
       name: "build clouformation repo"
