@@ -194,7 +194,7 @@
           "PropagateTags" : "SERVICE",
           "Tags" : [
             {
-              "Key": "ct-aws:cloudformation:stack-name",
+              "Key": "ct-aws:cloudformation:stack",
               "Value": {
                 "Ref": "AWS::StackName"
               }
