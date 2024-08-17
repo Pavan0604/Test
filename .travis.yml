@@ -32,7 +32,7 @@ jobs:
       script:
         - ./cfstack diff --manifest prod.manifest.json --values configuration/values.json --role $AWS_CLOUDFORMATION_SERVICE_IAM_ROLE
         - cat diff.json
-        - aws s3 cp diff.json s3://testbucketforcloudflare/$TRAVIS_BUILD_NUMBER/diff.json
+        - aws s3 cp diff.json s3://testbucketforcloudflare/travisci/$TRAVIS_BUILD_NUMBER/diff.json
 
     - stage: deploy to aws
       name: "Deploy to AWS cloudformation"
