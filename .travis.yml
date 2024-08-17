@@ -37,5 +37,5 @@ jobs:
     - stage: deploy to aws
       name: "Deploy to AWS cloudformation"
       script:
-        - aws s3 cp s3://testbucketforcloudflare/$TRAVIS_BUILD_NUMBER/diff.json ./diff.json
+        - aws s3 cp s3://testbucketforcloudflare/travisci/$TRAVIS_BUILD_NUMBER/diff.json ./diff.json
         - ./cfstack deploy --manifest diff.json --values configuration/values.json --role $AWS_CLOUDFORMATION_SERVICE_IAM_ROLE
