@@ -133,7 +133,7 @@
                   "SoftLimit": 900000
                 }
               ],
-              "Name": "nginx",
+              "Name": "nginx-container",
               "Privileged": false,
               "ReadonlyRootFilesystem": false
             }
