@@ -40,7 +40,7 @@ jobs:
         - aws s3 cp s3://testbucketforcloudflare/travisci/$TRAVIS_BUILD_NUMBER/diff.json ./diff.json
         - ./cfstack deploy --manifest diff.json --values configuration/values.json --role $AWS_CLOUDFORMATION_SERVICE_IAM_ROLE
 
-    - stage: Test the deployment 
-      name: "Test the deployment"
-      script: 
-        - 
+    # - stage: Test the deployment 
+    #   name: "Test the deployment"
+    #   script: 
+    #     - 
