@@ -181,7 +181,7 @@
           },
           "NetworkConfiguration": {
             "AwsvpcConfiguration": {
-              "AssignPublicIp": "DISABLED",
+              "AssignPublicIp": "ENABLED",
               "SecurityGroups": [
                 "sg-0815218a76f8d4ec0"
               ],
