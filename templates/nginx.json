@@ -20,6 +20,15 @@
           "SecretString": "{\"username\":\"changeme\",\"password\":\"replaceitwithpassword\"}"
         }
       },
+      "CloudflareTunnelSecretsManagerSecret": {
+        "Type": "AWS::SecretsManager::Secret",
+        "Properties": {
+          "Description": {
+            "Fn::Sub": "This is a Secrets Manager secret for ${AWS::StackName}-CloudflareTunnelSecretsManagerSecret"
+          },
+          "SecretString" : "<replaceme>"
+        }
+      },
       "NginxEcsTaskDefinitionIamRole": {
         "Properties": {
           "AssumeRolePolicyDocument": {
@@ -136,6 +145,53 @@
               "Name": "nginx-container",
               "Privileged": false,
               "ReadonlyRootFilesystem": false
+            },
+            {
+              "Essential": true,
+              "Image": "cloudflare/cloudflared:2023.3.1",
+              "Name": {
+                "Fn::Join": [
+                  "-",
+                  [
+                    {
+                      "Ref": "AWS::StackName"
+                    },
+                    "Cloudflare"
+                  ]
+                ]
+              },
+              "Environment": [
+                {
+                  "Name": "TUNNEL_LOGLEVEL",
+                  "Value": "warn"
+                }
+              ],
+              "ReadonlyRootFilesystem": false,
+              "Ulimits": [
+                {
+                  "HardLimit": 900000,
+                  "Name": "nofile",
+                  "SoftLimit": 900000
+                }
+              ],
+              "MemoryReservation": "128",
+              "EntryPoint": [
+                "cloudflared",
+                "tunnel",
+                "--no-tls-verify",
+                "--url",
+                "https://localhost:80",
+                "--no-autoupdate",
+                "run"
+              ],
+              "Secrets": [
+                {
+                  "Name": "TUNNEL_TOKEN",
+                  "ValueFrom": {
+                    "Ref": "CloudflareTunnelSecretsManagerSecret"
+                  }
+                }
+              ]
             }
           ],
           "ExecutionRoleArn": {
