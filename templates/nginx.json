@@ -178,9 +178,8 @@
               "EntryPoint": [
                 "cloudflared",
                 "tunnel",
-                "--no-tls-verify",
                 "--url",
-                "https://localhost:80",
+                "http://localhost:80",
                 "--no-autoupdate",
                 "run"
               ],
